@@ -52,10 +52,13 @@ run.png: run.gv
 run.gv: bracket tests/emptiness/01-automaton_test.txt
 	./bracket -gw -t ${THREADS} tests/emptiness/01-automaton_test.txt
 
-version.h: .git/HEAD .git/index
+version.h: .git/HEAD .git/index LICENSE
 	@echo "#ifndef VERSION_H" > $@
 	@echo "#define VERSION_H" >> $@
 	@echo "#define VERSION \"$(shell git describe --always HEAD)\"" >> $@
+	@echo "constexpr const char *license = R\"(" >> $@
+	@cat LICENSE >> $@
+	@echo ")\";" >> $@
 	@echo "#endif" >> $@
 	@sed '3q;d' $@ | cut -d ' ' -f 2,3
 

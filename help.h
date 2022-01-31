@@ -36,6 +36,8 @@ options:
               implicitly activate option -l
 
   -V : Print version information and exit
+
+Get help/Report bugs/Provide suggestions at: https://github.com/max-co/bracket
 )";
 
 #endif
