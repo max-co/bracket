@@ -1,5 +1,7 @@
 # Bracket
 
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/max-co/bracket/blob/main/LICENSE)
+
 Bracket Rabin (tree) Automata Checker of (non-)Emptiness Tool is a simple program for checking if a sufficiently small Rabin infinite tree automaton admits a successful run.
 
 Bracket makes use of:
