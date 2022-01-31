@@ -1,0 +1,21 @@
+entrypoints Automaton ;
+
+rules		Automaton ::= "states" ":=" Integer EmptyListAttribute ;
+rules		EmptyListAttribute ::= ListAttribute | {- epsilon -} ;
+rules		ListAttribute ::= Attribute TailAttribute ;
+rules		TailAttribute ::= Attribute TailAttribute | {- epsilon -} ;
+rules		Attribute ::= "start" ":=" Integer | "transitions" ":=" ListTransition | "acceptances" ":=" ListCondition ;
+rules		ListTransition ::= Transition TailTransition ;
+rules		TailTransition ::= Transition TailTransition | {- epsilon -} ;
+rules		Transition ::= Integer ">" Integer Integer Commas ;
+rules		Commas ::= "," Commas | {- epsilon -} ;
+rules		ListCondition ::= Condition TailCondition ;
+rules		TailCondition ::= Condition TailCondition | {- epsilon -} ;
+rules		Condition ::= "(" Set "," Set ")" Commas ;
+rules		Set ::= SetA TailSet ;
+rules		TailSet ::= SetA TailSet | {- epsilon -} ;
+rules		SetA ::= SetB TailSetA ;
+rules		TailSetA ::= "&" SetB TailSetA | {- epsilon -} ;
+rules		SetB ::= Integer | "none" | "all" | "(" Set ")" | "!" SetB ;
+
+comment "#" ;

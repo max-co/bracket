@@ -1,0 +1,152 @@
+#include <cwchar>
+#include <cinttypes>
+#include <cstdint>
+#include <cerrno>
+#include "rabin_automaton.h"
+
+COMPILER Automaton
+    Rabin_automaton *automaton;
+/*--------------------------------------------------------------------------*/
+CHARACTERS
+    digit = "0123456789".
+
+TOKENS
+    integer = digit {digit}.
+
+COMMENTS FROM '#' TO '\n'
+
+IGNORE '\r' + '\n' + '\t'
+
+
+PRODUCTIONS
+Automaton   (.  state_t state_num = 0;  .) =
+    "states"
+    ":="
+    Integer<state_num>  (.  if (0 == state_num) {
+                                if (0 == errors->count) {
+                                    SemErr(L"the set of states of the automaton cannot be empty");
+                                }
+                                throw Illegal_state_set();
+                            }
+                            automaton = new Rabin_automaton(state_num); .)
+    EmptyListAttribute .
+
+
+EmptyListAttribute =
+    ListAttribute
+    | /* epsilon */ .
+
+
+ListAttribute = Attribute TailAttribute .
+
+
+TailAttribute =
+    Attribute TailAttribute
+    | /* epsilon */ .
+
+
+Attribute   (.  state_t start = 0;  .) =
+    "start"
+    ":="
+    Integer<start>  (.  if (!automaton->is_valid_state(start)) {
+                            SemErr(L"state not in automaton's set of states");
+                        } else if (0 == errors->count) {
+                            automaton->set_start(start);
+                        }   .)
+    | "transitions" ":=" ListTransition
+    | "acceptances" ":=" ListCondition .
+
+
+ListTransition = Transition TailTransition .
+
+
+TailTransition =
+    Transition TailTransition
+    | /* epsilon */ .
+
+
+Transition  (.  state_t q1 = 0;
+                state_t q2 = 0;
+                state_t q3 = 0; .) =
+    Integer<q1> (.  if (!automaton->is_valid_state(q1)) {
+                        SemErr(L"state not in automaton's set of states");
+                    }   .)
+    '>'
+    Integer<q2> (.  if (!automaton->is_valid_state(q2)) {
+                        SemErr(L"state not in automaton's set of states");
+                    }   .)
+    Integer<q3> (.  if (!automaton->is_valid_state(q3)) {
+                        SemErr(L"state not in automaton's set of states");
+                    }   .)
+    Commas      (.  if (0 == errors->count) {
+                        automaton->add_transition(q1, q2, q3);
+                    }   .) .
+
+
+Commas =
+    ',' Commas
+    | /* epsilon */ .
+
+
+ListCondition = Condition TailCondition .
+
+
+TailCondition =
+    Condition TailCondition
+    | /* epsilon */ .
+
+
+Condition   (.  bitset_t l(automaton->states);
+                bitset_t u(automaton->states);  .) =
+    '('
+    Set<l>
+    ','
+    Set<u>
+    ')'
+    Commas  (.  if (0 == errors->count) {
+                    automaton->add_acceptance(std::move(l), std::move(u));
+                }   .) .
+
+
+Set<bitset_t &set>  (.  bitset_t op(automaton->states); .) = SetA<op> TailSet<set, op> .
+
+
+SetA<bitset_t &set> (.  bitset_t op(automaton->states); .) = SetB<op> TailSetA<set, op> .
+
+
+TailSet<bitset_t &set, bitset_t &op>    (.  bitset_t new_op(automaton->states); .) =
+    SetA<new_op>        (.  op |= new_op;   .)
+    TailSet<set, op>
+    | /* epsilon */     (.  set = std::move(op);    .) .
+
+
+TailSetA<bitset_t &set, bitset_t &op>   (.  bitset_t new_op(automaton->states); .) =
+    '&'
+    SetB<new_op>        (.  op &= new_op;   .)
+    TailSetA<set, op>
+    | /* epsilon */     (.  set = std::move(op);    .) .
+
+
+SetB<bitset_t &set> (.  state_t q = 0;  .) =
+    Integer<q>          (.  if (automaton->is_valid_state(q)) {
+                                set.set(q);
+                            } else {
+                                SemErr(L"state not in automaton's set of states");
+                            }   .)
+    | "none"            (.  /* no-op */ .)
+    | "all"             (.  set.flip(); .)
+    | '(' Set<set> ')'
+    | '^' SetB<set>     (.  set.flip(); .) .
+
+
+Integer<state_t &set> =
+    integer (.  errno = 0;
+                unsigned long tmp = wcstoul(t->val, NULL, 10);
+                if (errno || tmp > STATE_MAX) {
+                    SemErr(L"number too large");
+                } else {
+                    set = static_cast<state_t>(tmp);
+                }   .) .
+
+
+END Automaton.

@@ -1,0 +1,19 @@
+s/"invalid [a-zA-Z]*Attribute"/"invalid automaton attribute"/
+s/"invalid TailTransition"/"invalid transition"/
+s/"invalid Commas"/"\\",\\" expected"/
+s/"invalid TailCondition"/"invalid condition"/
+s/"invalid [a-zA-Z]*Set[a-zA-Z]*"/"invalid set of states"/
+
+s/Parser::Parser(Scanner \*scanner) {/Parser::Parser(Scanner \*scanner) : automaton{nullptr} {/
+
+s/void Parser::SynErr(int n) {/&\
+   if (nullptr != automaton) {\
+      delete automaton\;\
+      automaton = nullptr\;\
+   }/
+
+s/void Parser::SemErr(const wchar_t\* msg) {/&\
+   if (nullptr != automaton) {\
+      delete automaton\;\
+      automaton = nullptr\;\
+   }/

@@ -1,0 +1,1 @@
+-- line 1 col 11: the set of states of the automaton cannot be empty

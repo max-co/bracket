@@ -1,0 +1,1 @@
+-- line 5 col 7: state not in automaton's set of states

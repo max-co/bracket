@@ -1,0 +1,13 @@
+states := 3
+
+start := 0
+
+transitions :=
+0 > 1 1
+0 > 2 2
+#this is a comment
+1 > 1 1, 1 > 2 2
+2 > 1 1, 2 > 2 2
+
+acceptances :=
+(1, 0 1 2)

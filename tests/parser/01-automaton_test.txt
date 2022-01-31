@@ -1,0 +1,6 @@
+states := 0
+start := 10
+
+transitions := 1 > 2 12
+1 > 1 50
+
