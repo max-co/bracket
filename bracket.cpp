@@ -85,7 +85,7 @@ main(int argc, char *argv[])
 		return EXIT_SUCCESS;
 	}
 	if (config.version) {
-		std::cout << PROG_VERSION << std::endl;
+		std::cout << PROG_VERSION << std::endl << license;
 		return EXIT_SUCCESS;
 	}
 	if (optind < argc) {

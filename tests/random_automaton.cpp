@@ -66,7 +66,7 @@ main(int argc, char *argv[])
 		}
 	}
 	if (config.version) {
-		cout << "random_automaton " VERSION << endl;
+		cout << "random_automaton " VERSION << endl << license;
 		return EXIT_SUCCESS;
 	}
 	if (0 >= config.states) {
