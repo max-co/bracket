@@ -1,7 +1,7 @@
 #ifndef RABIN_AUTOMATON_H
 #define RABIN_AUTOMATON_H
 
-#include <iostream>
+#include <list>
 
 #include "run.h"
 #include "search_context.h"

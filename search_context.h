@@ -1,9 +1,8 @@
 #ifndef SEARCH_CONTEXT_H
 #define SEARCH_CONTEXT_H
 
-#include <iostream>
 #include <mutex>
-#include <unordered_set>
+#include <vector>
 
 #include "typedefs.h"
 

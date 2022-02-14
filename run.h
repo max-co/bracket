@@ -1,10 +1,9 @@
 #ifndef RUN_H
 #define RUN_H
 
-#include <iostream>
 #include <mutex>
+#include <ostream>
 #include <unordered_map>
-#include <unordered_set>
 
 #include "run_node.h"
 
