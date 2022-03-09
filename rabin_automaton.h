@@ -2,6 +2,7 @@
 #define RABIN_AUTOMATON_H
 
 #include <list>
+#include <utility>
 
 #include "run.h"
 #include "search_context.h"
@@ -58,8 +59,6 @@ public:
 	std::ostream &print_logic_prog_rep(std::ostream &) const;
 
 private:
-	bool find_run_aux(Search_context &, Run &, Run_node *) const;
-	bool is_accepted(Run_node *const, bitset_t &) const;
 	std::ostream &acceptances_print_logic_prog_rep(std::ostream &) const;
 
 	friend std::ostream &operator<<(std::ostream &, const Rabin_automaton &);
