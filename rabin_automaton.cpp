@@ -1,7 +1,10 @@
 #include <algorithm>
+#include <chrono>
 #include <functional>
 #include <queue>
 #include <stdexcept>
+#include <thread>
+#include <tuple>
 
 #include "rabin_automaton.h"
 
@@ -71,12 +74,6 @@ Rabin_automaton::add_acceptance(bitset_t &&l, bitset_t &&u)
 Run *
 Rabin_automaton::find_run(const int max_threads) const
 {
-	if (1 != max_threads) {
-		throw std::invalid_argument("multithreading is disabled in this version");
-	}
-	if (!has_transitions || conditions.empty()) {
-		return nullptr;
-	}
 
 	class Run_piece final
 	{
@@ -113,6 +110,7 @@ Rabin_automaton::find_run(const int max_threads) const
 				all.set(state);
 			}
 		};
+
 		Run_piece(const state_t p, const Run_piece *const l, const Run_piece *const r)
 			: run{l->run}
 			, state{p}
@@ -143,6 +141,7 @@ Rabin_automaton::find_run(const int max_threads) const
 			all |= right->all;
 			all.set(p);
 		};
+
 		Run_node *node(Run_node *p = nullptr) const
 		{
 			Run_node *res = new Run_node(state, p);
@@ -154,10 +153,12 @@ Rabin_automaton::find_run(const int max_threads) const
 			}
 			return res;
 		};
+
 		bool invalid_child() const
 		{
 			return (nullptr != left && left->invalid) || (nullptr != right && right->invalid);
 		};
+
 		bool operator<(const Run_piece &rhs) const
 		{
 			if (std::less<Run *>{}(&run, &rhs.run)) {
@@ -195,22 +196,152 @@ Rabin_automaton::find_run(const int max_threads) const
 			}
 			return false;
 		};
+
 		static bool similar(const Run_piece &lhs, const Run_piece &rhs)
 		{
 			return &lhs.run == &rhs.run && lhs.state == rhs.state && lhs.graft == rhs.graft
 				   && lhs.internal == rhs.internal && lhs.nonlive == rhs.nonlive && lhs.all == rhs.all;
 		};
-	};
+	}; // class Run_piece
+
+	class Find_thread final
+	{
+	private:
+		std::thread thread;
+		bool *done;
+
+	public:
+		Find_thread(std::thread &&t, bool *d) : thread{std::move(t)}, done{d} {};
+
+		Find_thread(const Find_thread &) = delete;
+		Find_thread(Find_thread &&) = delete;
+		Find_thread &operator=(const Find_thread &) = delete;
+		Find_thread &operator=(Find_thread &&) = delete;
+
+		~Find_thread()
+		{
+			thread.join();
+			delete done;
+		};
+
+		bool has_finished() { return *done; }
+	}; // class Find_thread
 
 	typedef std::list<Run_piece> Piece_list;
-	Piece_list *src = new Piece_list[states];
-	Piece_list *dst = new Piece_list[states];
 
+	class Find_context final
+	{
+	public:
+		Run &run;
+		state_t parent;
+		state_t step;
+		bitset_t tmp;
+		Run_piece **const grafts;
+		const Piece_list *srcs;
+		Piece_list *dst;
+		std::queue<const Run_piece *> lq;
+		std::queue<const Run_piece *> rq;
+
+		Find_context(Run &r, Run_piece **const g)
+			: run{r}, parent{0}, step{0}, tmp{r.states}, grafts{g}, srcs{nullptr}, dst{nullptr} {};
+
+		void reset(const state_t q, const state_t h, const Piece_list *s, Piece_list *d)
+		{
+			parent = q;
+			step = h;
+			srcs = s;
+			dst = d;
+		};
+	}; // class Find_context
+
+	const auto inv = [](const Run_piece &v) -> bool { return v.invalid; };
+
+	const auto find_run_thread = [this](Find_context &c, bool &done) {
+		const auto fitting_pieces
+			= [this](
+				  const Run &run, const Run_piece *other, const state_t parent, Run_piece *graft, const Piece_list &src,
+				  std::queue<const Run_piece *> &out, const state_t h, bitset_t &tmp) {
+				  for (; !out.empty(); out.pop()) {
+				  }
+				  if (run.nonempty(graft->state) || (0 != other->height && other->all.test(graft->state))) {
+					  if (graft->height >= h) {
+						  out.push(graft);
+					  }
+					  return;
+				  }
+				  for (auto t = src.cbegin(); t != src.cend(); t++) {
+					  if (t->height < h || t->internal.test(parent)) {
+						  continue;
+					  }
+					  if (!other->nonlive.test(parent) && !t->nonlive.test(parent)) {
+						  out.push(&*t);
+						  continue;
+					  }
+					  tmp.reset();
+					  tmp |= other->internal;
+					  tmp |= t->internal;
+					  tmp.set(parent);
+					  for (auto a = conditions.cbegin(); a != conditions.cend(); a++) {
+						  if (a->u.test(parent) && !tmp.intersects(a->l)) {
+							  out.push(&*t);
+							  break;
+						  }
+					  }
+				  }
+			  }; // fitting_pieces
+		// start of find_run_thread
+		if (c.run.nonempty(c.parent)) {
+			done = true;
+			return;
+		}
+		const state_t &s = c.parent;
+		const state_t &h = c.step;
+		const Run_piece *const wild_card = *c.grafts;
+		for (auto t = transitions[s].cbegin(); t != transitions[s].cend(); t++) {
+			if (c.run.nonempty(starting_state)) {
+				done = true;
+				return;
+			}
+			fitting_pieces(c.run, wild_card, s, c.grafts[t->left], c.srcs[t->left], c.lq, 0, c.tmp);
+			for (const Run_piece *left; !c.lq.empty() && !c.run.nonempty(starting_state); c.lq.pop()) {
+				left = c.lq.front();
+				fitting_pieces(
+					c.run, left, s, c.grafts[t->right], c.srcs[t->right], c.rq, (left->height == h) ? 0 : h, c.tmp);
+				for (const Run_piece *right; !c.rq.empty() && !c.run.nonempty(starting_state); c.rq.pop()) {
+					right = c.rq.front();
+					c.dst->emplace_back(s, left, right);
+					if (c.dst->back().graft) {
+						c.grafts[s]->height = c.dst->back().height;
+						c.dst->pop_back();
+						done = true;
+						return;
+					}
+				}
+			}
+		}
+		if (!c.run.nonempty(starting_state)) {
+			c.dst->sort();
+		}
+		done = true;
+	}; // find_run_thread
+
+	// start of Rabin_automaton::find_run
+	if (1 > max_threads) {
+		throw std::invalid_argument("invalid max_threads (is less than 1)");
+	}
+	if (STATE_MAX < static_cast<unsigned int>(max_threads)) {
+		throw std::invalid_argument("invalid max_threads (too large)");
+	}
+	if (!has_transitions || conditions.empty()) {
+		return nullptr;
+	}
 	Run *res = new Run(states, starting_state);
 	Run &run = *res;
+	Piece_list *src = new Piece_list[states];
+	Piece_list *dst = new Piece_list[states];
 	Run_piece **grafts = new Run_piece *[states];
 	for (state_t s = 0; s < states; s++) {
-		grafts[s] = new Run_piece(run, s, true, 0);
+		grafts[s] = new Run_piece(run, s, true);
 		for (auto a = conditions.cbegin(); a != conditions.cend(); a++) {
 			if (a->u.test(s) && !a->l.test(s)) {
 				src[s].emplace_back(run, s);
@@ -218,78 +349,75 @@ Rabin_automaton::find_run(const int max_threads) const
 		}
 	}
 
-	const auto fitting_pieces
-		= [this](
-			  const Run &run, const Run_piece *other, const state_t parent, Run_piece *graft, const Piece_list &src,
-			  std::queue<const Run_piece *> &out, const state_t h, bitset_t &tmp) {
-			  while (!out.empty()) {
-				  out.pop();
-			  }
-			  if (run.nonempty(graft->state) || (0 != other->height && other->all.test(graft->state))) {
-				  if (graft->height >= h) {
-					  out.push(graft);
-				  }
-				  return;
-			  }
-			  for (auto t = src.cbegin(); t != src.cend(); t++) {
-				  if (t->height < h || t->internal.test(parent)) {
-					  continue;
-				  }
-				  if (!other->nonlive.test(parent) && !t->nonlive.test(parent)) {
-					  out.push(&*t);
-					  continue;
-				  }
-				  tmp.reset();
-				  tmp |= other->internal;
-				  tmp |= t->internal;
-				  tmp.set(parent);
-				  for (auto a = conditions.cbegin(); a != conditions.cend(); a++) {
-					  if (a->u.test(parent) && !tmp.intersects(a->l)) {
-						  out.push(&*t);
-						  break;
-					  }
-				  }
-			  }
-		  };
-
-	const auto inv = [](const Run_piece &v) -> bool { return v.invalid; };
-
-	bitset_t tmp{states};
-	Run_piece wild_card = Run_piece(run, 0, true);
-	std::queue<const Run_piece *> lq;
-	std::queue<const Run_piece *> rq;
+	const state_t max_workers = std::min(states, static_cast<state_t>(max_threads - 1));
+	std::queue<Find_context *> ctx_pool;
+	{
+		state_t i = 0;
+		do {
+			ctx_pool.push(new Find_context(run, grafts));
+		} while (++i < max_workers);
+	}
+	std::list<std::pair<Find_thread, Find_context *>> workers;
 	for (state_t h = 0; h < states; h++, std::swap(src, dst)) {
-		for (state_t s = 0; s < states; s++) {
-			if (run.nonempty(starting_state) || run.nonempty(s)) {
-				continue;
-			}
-			for (auto t = transitions[s].cbegin(); t != transitions[s].cend(); t++) {
-				if (run.nonempty(starting_state) || run.nonempty(s)) {
+
+		if (1 == max_threads) {
+			Find_context *c = ctx_pool.front();
+			bool d;
+			for (state_t s = 0; s < states; s++) {
+				c->reset(s, h, src, &dst[s]);
+				find_run_thread(*c, d);
+				if (run.nonempty(starting_state)) {
 					break;
 				}
-				fitting_pieces(run, &wild_card, s, grafts[t->left], src[t->left], lq, 0, tmp);
-				while (!lq.empty()) {
-					if (run.nonempty(starting_state) || run.nonempty(s)) {
-						break;
+			}
+
+		} else {
+
+			state_t s = 0;
+			for (; s < max_workers; s++) {
+				bool *done = new bool{false};
+				Find_context *c = ctx_pool.front();
+				ctx_pool.pop();
+				c->reset(s, h, src, &dst[s]);
+				workers.emplace_back(
+					std::piecewise_construct,
+					std::forward_as_tuple(std::thread(find_run_thread, std::ref(*c), std::ref(*done)), done),
+					std::forward_as_tuple(c));
+			}
+			for (;;) {
+				if (run.nonempty(starting_state) || workers.empty()) {
+					for (auto t = workers.begin(); t != workers.end(); t++) {
+						ctx_pool.push(t->second);
+						t = workers.erase(t);
+						t--;
 					}
-					const Run_piece *left = lq.front();
-					lq.pop();
-					fitting_pieces(run, left, s, grafts[t->right], src[t->right], rq, (left->height == h) ? 0 : h, tmp);
-					while (!rq.empty()) {
-						if (run.nonempty(s)) {
-							break;
+					break;
+				}
+				for (auto t = workers.begin(); t != workers.end(); t++) {
+					if (t->first.has_finished()) {
+						ctx_pool.push(t->second);
+						t = workers.erase(t);
+						t--;
+						for (; s < states && (run.nonempty(starting_state) || run.nonempty(s)); s++) {
 						}
-						const Run_piece *right = rq.front();
-						rq.pop();
-						dst[s].emplace_back(s, left, right);
-						if (dst[s].back().graft) {
-							grafts[s]->height = dst[s].back().height;
-							dst[s].pop_back();
+						if (s < states) {
+							bool *done = new bool{false};
+							Find_context *c = ctx_pool.front();
+							ctx_pool.pop();
+							c->reset(s, h, src, &dst[s]);
+							workers.emplace_back(
+								std::piecewise_construct,
+								std::forward_as_tuple(
+									std::thread(find_run_thread, std::ref(*c), std::ref(*done)), done),
+								std::forward_as_tuple(c));
+							s++;
 						}
 					}
 				}
+				std::this_thread::sleep_for(std::chrono::milliseconds(2));
 			}
-		}
+		} // found new Run_pieces
+
 		if (run.nonempty(starting_state)) {
 			break;
 		}
@@ -298,7 +426,6 @@ Rabin_automaton::find_run(const int max_threads) const
 				grafts[q]->height = h + 1;
 			}
 
-			dst[q].sort();
 			dst[q].merge(src[q]);
 			for (auto t = dst[q].begin(); t != dst[q].end(); t++) {
 				if (run.nonempty(q) || (t != dst[q].begin() && Run_piece::similar(*t, *std::prev(t)))) {
@@ -326,6 +453,9 @@ Rabin_automaton::find_run(const int max_threads) const
 	if (!run.nonempty(starting_state)) {
 		delete res;
 		res = nullptr;
+	}
+	for (; !ctx_pool.empty(); ctx_pool.pop()) {
+		delete ctx_pool.front();
 	}
 	for (state_t s = 0; s < states; s++) {
 		delete grafts[s];
