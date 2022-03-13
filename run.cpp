@@ -7,7 +7,6 @@ Run::Run(const state_t state_num, const state_t start) : states{state_num}, star
 	grafts = new const Run_node *[states]();
 	dependencies = new const Run_node *[states]();
 	roots.reserve(states);
-	nogoods = new bool[states]();
 	lock = new std::mutex;
 }
 
@@ -18,30 +17,7 @@ Run::~Run()
 	}
 	delete[] grafts;
 	delete[] dependencies;
-	delete[] nogoods;
 	delete lock;
-}
-
-void
-Run::frontier(const state_t s, std::vector<state_t> &f) const
-{
-	const std::lock_guard<std::mutex> l(*lock);
-	frontier_aux(grafts[s], f);
-}
-
-void
-Run::frontier_aux(const Run_node *const n, std::vector<state_t> &f) const
-{
-	if (nullptr != n->left) {
-		frontier_aux(n->left, f);
-		frontier_aux(n->right, f);
-		return;
-	}
-	if (n->graft) {
-		frontier_aux(grafts[n->state], f);
-		return;
-	}
-	f.push_back(n->state);
 }
 
 void

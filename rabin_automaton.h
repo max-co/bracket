@@ -5,7 +5,6 @@
 #include <utility>
 
 #include "run.h"
-#include "search_context.h"
 
 class Acceptance final
 {
