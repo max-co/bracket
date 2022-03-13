@@ -77,8 +77,8 @@ If the **-g** or **-o** options are supplied and an infinite successful run is f
 ![graph representing an accepted run](doc/graphics/run.svg)
 
 This is the representation of the successful run found by Bracket for the automaton in the Input section.
-Each run node is labelled with its associated state and the edges of the run are represented by directed solid edges.
-The dotted edges have a different meaning and are called graft edges.
+Each run node is labelled with its associated state and the run root is represented by the node with the bars.
+The edges of the run are represented by directed solid edges while the dotted edges are called graft edges and have a different meaning:
 If *u* --> *v* is a graft edge then when *u* is reached the run behaves as if it was on *v*, in particular the states of the next nodes of the run are those of the children of *v*.
 When a node *w* with no outgoing edges is reached then the run behaves as the (lowest) ancestor of *w* in the run that has the same state of *w*.
 In this example each path of the found run is of the type 0,2,2,2,2,2,...

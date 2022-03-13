@@ -13,6 +13,8 @@
 <g id="node1" class="node">
 <title>r0</title>
 <ellipse fill="none" stroke="#000000" cx="58" cy="-234" rx="18" ry="18"/>
+<polyline fill="none" stroke="#000000" points="69.9052,-247.5 46.0948,-247.5 "/>
+<polyline fill="none" stroke="#000000" points="69.9052,-220.5 46.0948,-220.5 "/>
 <text text-anchor="middle" x="58" y="-230.3" font-family="Times,serif" font-size="14.00" fill="#000000">0</text>
 </g>
 <!-- r1 -->

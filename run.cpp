@@ -72,7 +72,11 @@ Run::out_aux(
 	std::unordered_map<const Run_node *, runid_t> &id_map) const
 {
 	id_map[node] = id;
-	os << "    r" << id << " [label = \"" << node->state << "\"]";
+	if (0 == id) {
+		os << "    r" << id << " [label = \"" << node->state << "\", shape = Mcircle]";
+	} else {
+		os << "    r" << id << " [label = \"" << node->state << "\"]";
+	}
 	if (nullptr != node->left) {
 		const runid_t left_id = free_id++;
 		const runid_t right_id = free_id++;
