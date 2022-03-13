@@ -66,22 +66,22 @@ acceptances := (1, 0 1 2)
 The number of states is specified with the **states** attribute and each state is identified by an integer from 0 to **states**-1.
 The acceptance conditions are specified in a list of couples (*L*, *U*) where *L* and *U* are sets of states.
 The set of states can be constructed starting from the state numbers which represent the corresponding singleton, and the keywords **none** and **all** which indicate respectively the empty set and the set {0,1,2,..,**states**-1}.
-More complex sets can be constructed using the negation (**^**), intersection (**&**) and union (**[whitespace]**) operators and possibly supplementary perentheses.
+More complex sets can be constructed using the negation (**^**), intersection (**&**) and union (**[whitespace]**) operators and possibly supplementary parentheses.
 
 ## Output
 
-If the language of the automaton is empty Bracket writes **EMPTY LANGUAGE** to the standard output or alternatively **NONEMPTY LANGUAGE** is written if the automaton has an accepted run.
+If the language of the automaton is empty Bracket writes **EMPTY LANGUAGE** on the standard output or alternatively **NONEMPTY LANGUAGE** is written if the automaton has an accepted run.
 
 If the **-g** or **-o** options are supplied and an infinite successful run is found then Bracket provides in output a finite [Graphviz](https://graphviz.org/) representation of the found run.
 
 ![graph representing an accepted run](doc/graphics/run.svg)
 
-This is the representation of the successful run found by Bracket for the automaton of the Input section.
+This is the representation of the successful run found by Bracket for the automaton in the Input section.
 Each run node is labelled with its associated state and the edges of the run are represented by directed solid edges.
 The dotted edges have a different meaning and are called graft edges.
 If *u* --> *v* is a graft edge then when *u* is reached the run behaves as if it was on *v*, in particular the states of the next nodes of the run are those of the children of *v*.
 When a node *w* with no outgoing edges is reached then the run behaves as the (lowest) ancestor of *w* in the run that has the same state of *w*.
-In this example each path of the found run is of the type 0,1,2,2,2,2,2,...
+In this example each path of the found run is of the type 0,2,2,2,2,2,...
 
 **NOTE** that the runs found by Bracket have no additional properties (like compactness) apart from being accepted and that if Bracket is executed with multiple threads by using the **-t** option then the output runs may differ between different invocations.
 
