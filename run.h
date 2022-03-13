@@ -18,7 +18,6 @@ private:
 	const Run_node **grafts;
 	const Run_node **dependencies;
 	std::unordered_set<const Run_node *> roots;
-	bool *nogoods;
 	std::mutex *lock;
 
 public:
@@ -29,12 +28,10 @@ public:
 	Run &operator=(const Run &) = delete;
 	Run &operator=(Run &&) = delete;
 
-	bool empty(const state_t q) const { return nogoods[q]; };
-	void set_empty(const state_t q) { nogoods[q] = true; };
 	bool nonempty(const state_t q) const { return nullptr != grafts[q]; };
-
 	void frontier(const state_t, std::vector<state_t> &) const;
 	void save_subruns(const Run_node *const);
+
 	std::ostream &print_logic_prog_rep(std::ostream &) const;
 
 private:

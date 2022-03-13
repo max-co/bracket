@@ -7,7 +7,6 @@ Run::Run(const state_t state_num, const state_t start) : states{state_num}, star
 	grafts = new const Run_node *[states]();
 	dependencies = new const Run_node *[states]();
 	roots.reserve(states);
-	nogoods = new bool[states]();
 	lock = new std::mutex;
 }
 
@@ -18,7 +17,6 @@ Run::~Run()
 	}
 	delete[] grafts;
 	delete[] dependencies;
-	delete[] nogoods;
 	delete lock;
 }
 
