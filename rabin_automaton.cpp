@@ -329,9 +329,6 @@ Rabin_automaton::find_run(const int max_threads) const
 	if (1 > max_threads) {
 		throw std::invalid_argument("invalid max_threads (is less than 1)");
 	}
-	if (STATE_MAX < static_cast<unsigned int>(max_threads)) {
-		throw std::invalid_argument("invalid max_threads (too large)");
-	}
 	if (!has_transitions || conditions.empty()) {
 		return nullptr;
 	}
@@ -349,7 +346,8 @@ Rabin_automaton::find_run(const int max_threads) const
 		}
 	}
 
-	const state_t max_workers = std::min(states, static_cast<state_t>(max_threads - 1));
+	const state_t max_workers
+		= (states < static_cast<unsigned int>(max_threads - 1)) ? states : static_cast<state_t>(max_threads - 1);
 	std::queue<Find_context *> ctx_pool;
 	{
 		state_t i = 0;
