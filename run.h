@@ -4,6 +4,7 @@
 #include <mutex>
 #include <ostream>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "run_node.h"
 
@@ -15,8 +16,9 @@ public:
 
 private:
 	const Run_node **grafts;
+	const Run_node **dependencies;
+	std::unordered_set<const Run_node *> roots;
 	bool *nogoods;
-	state_t *dependencies;
 	std::mutex *lock;
 
 public:
@@ -36,7 +38,7 @@ public:
 	std::ostream &print_logic_prog_rep(std::ostream &) const;
 
 private:
-	void save_subruns_aux(const Run_node *const, const state_t);
+	void save_subruns_aux(const Run_node *const, const Run_node *const);
 	void frontier_aux(const Run_node *const, std::vector<state_t> &) const;
 	std::ostream &print_logic_prog_rep_aux(
 		std::ostream &, const Run_node *const, runid_t &, std::unordered_map<const Run_node *, runid_t> &) const;
