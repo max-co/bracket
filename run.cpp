@@ -21,28 +21,6 @@ Run::~Run()
 }
 
 void
-Run::frontier(const state_t s, std::vector<state_t> &f) const
-{
-	const std::lock_guard<std::mutex> l(*lock);
-	frontier_aux(grafts[s], f);
-}
-
-void
-Run::frontier_aux(const Run_node *const n, std::vector<state_t> &f) const
-{
-	if (nullptr != n->left) {
-		frontier_aux(n->left, f);
-		frontier_aux(n->right, f);
-		return;
-	}
-	if (n->graft) {
-		frontier_aux(grafts[n->state], f);
-		return;
-	}
-	f.push_back(n->state);
-}
-
-void
 Run::save_subruns(const Run_node *const n)
 {
 	const std::lock_guard<std::mutex> l(*lock);

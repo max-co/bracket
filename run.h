@@ -29,14 +29,12 @@ public:
 	Run &operator=(Run &&) = delete;
 
 	bool nonempty(const state_t q) const { return nullptr != grafts[q]; };
-	void frontier(const state_t, std::vector<state_t> &) const;
 	void save_subruns(const Run_node *const);
 
 	std::ostream &print_logic_prog_rep(std::ostream &) const;
 
 private:
 	void save_subruns_aux(const Run_node *const, const Run_node *const);
-	void frontier_aux(const Run_node *const, std::vector<state_t> &) const;
 	std::ostream &print_logic_prog_rep_aux(
 		std::ostream &, const Run_node *const, runid_t &, std::unordered_map<const Run_node *, runid_t> &) const;
 	std::ostream &out_aux(
