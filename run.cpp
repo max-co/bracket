@@ -37,7 +37,7 @@ Run::frontier_aux(const Run_node *const n, std::vector<state_t> &f) const
 		frontier_aux(n->right, f);
 		return;
 	}
-	if (n->live) {
+	if (n->graft) {
 		frontier_aux(grafts[n->state], f);
 		return;
 	}
@@ -77,7 +77,7 @@ operator<<(std::ostream &os, const Run &run)
 	const Run_node *root = run.grafts[run.start];
 	if (root != run.dependencies[run.start]) {
 		Run_node r(run.start);
-		r.live = true;
+		r.graft = true;
 		root = &r;
 	}
 	std::unordered_map<const Run_node *, runid_t> id_map;
@@ -112,7 +112,7 @@ Run::out_aux(
 		out_aux(os, node->right, right_id, free_id, id_map);
 		return os;
 	}
-	if (node->live) {
+	if (node->graft) {
 		os << std::endl;
 		auto t = id_map.find(grafts[node->state]);
 		if (id_map.end() == t) { // graft not yet printed
@@ -133,7 +133,7 @@ Run::print_logic_prog_rep(std::ostream &os) const
 	const Run_node *root = grafts[start];
 	if (root != dependencies[start]) {
 		Run_node r(start);
-		r.live = true;
+		r.graft = true;
 		root = &r;
 	}
 	std::unordered_map<const Run_node *, runid_t> id_map;
@@ -158,7 +158,7 @@ Run::print_logic_prog_rep_aux(
 		print_logic_prog_rep_aux(os, node->right, free_id, id_map);
 		return os;
 	}
-	if (node->live) {
+	if (node->graft) {
 		auto t = id_map.find(grafts[node->state]);
 		if (id_map.end() == t) { // graft not yet printed
 			os << std::endl;

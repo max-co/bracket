@@ -18,10 +18,10 @@ public:
 	Run_node *parent;
 	Run_node *left;
 	Run_node *right;
-	bool live;
+	bool graft;
 
-	Run_node(const state_t q) : state{q}, parent{nullptr}, left{nullptr}, right{nullptr}, live{false} {};
-	Run_node(const state_t q, Run_node *const p) : state{q}, parent{p}, left{nullptr}, right{nullptr}, live{false} {};
+	Run_node(const state_t q) : state{q}, parent{nullptr}, left{nullptr}, right{nullptr}, graft{false} {};
+	Run_node(const state_t q, Run_node *const p) : state{q}, parent{p}, left{nullptr}, right{nullptr}, graft{false} {};
 	Run_node(const Run_node &, const bool = false, std::vector<state_t> *const = nullptr);
 	Run_node(Run_node &&);
 	~Run_node();

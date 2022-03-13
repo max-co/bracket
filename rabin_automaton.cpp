@@ -146,7 +146,7 @@ Rabin_automaton::find_run(const int max_threads) const
 		{
 			Run_node *res = new Run_node(state, p);
 			if (graft) {
-				res->live = true;
+				res->graft = true;
 			} else if (nullptr != left) {
 				res->left = left->node(res);
 				res->right = right->node(res);
