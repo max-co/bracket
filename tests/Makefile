@@ -34,8 +34,8 @@ take = $(word $(1),$(subst _,$(empty) $(empty),$(2)))
 enum = $(shell seq -w $(1))
 line = $(shell tr '\n' '\t' < $(2) | cut -f $(1))
 
-OBJS = random_automaton.o ../rabin_automaton.o ../search_context.o ../run_node.o ../run.o
-FORCED = ../version.h ../bracket ../rabin_automaton.o ../search_context.o ../run_node.o ../run.o
+OBJS = random_automaton.o ../rabin_automaton.o ../run_node.o ../run.o
+FORCED = ../version.h ../bracket ../rabin_automaton.o ../run_node.o ../run.o
 
 .PHONY: clean mostlyclean distclean benchmarks tests all
 .INTERMEDIATE: time_installed
@@ -103,7 +103,7 @@ bracket: ../bracket
 random_automaton: ${OBJS}
 	${CXX} ${CPPFLAGS} ${CXXFLAGS} $^ -o $@
 
-random_automaton.o: ../run.h ../run_node.h ../typedefs.h ../rabin_automaton.h ../version.h ../search_context.h random_config.h
+random_automaton.o: ../run.h ../run_node.h ../typedefs.h ../rabin_automaton.h ../version.h random_config.h
 
 $(OBJS): | ../boost
 

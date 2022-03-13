@@ -17,7 +17,7 @@ export THREADS = 1
 .INTERMEDIATE: CocoSourcesCPP.zip boost_1_75_0.tar.gz Parser_incomplete.cpp Parser_unformatted.cpp
 .SECONDARY: CocoSourcesCPP CocoSourcesCPP_license.txt
 
-WITH_HEADER = Parser.o Scanner.o rabin_automaton.o run.o run_node.o search_context.o
+WITH_HEADER = Parser.o Scanner.o rabin_automaton.o run.o run_node.o
 OBJS = ${WITH_HEADER} file_descriptor.o bracket.o
 
 bracket: ${OBJS}
@@ -27,12 +27,11 @@ img: run.png
 
 $(foreach var,$(WITH_HEADER),$(eval $(var): $(basename $(var)).h))
 
-bracket.o: bracket.cpp Scanner.h Parser.h help.h config.h version.h rabin_automaton.h run.h run_node.h typedefs.h search_context.h
-Parser.o: Scanner.h rabin_automaton.h run.h run_node.h typedefs.h search_context.h
-rabin_automaton.o: run.h run_node.h typedefs.h search_context.h
+bracket.o: bracket.cpp Scanner.h Parser.h help.h config.h version.h rabin_automaton.h run.h run_node.h typedefs.h
+Parser.o: Scanner.h rabin_automaton.h run.h run_node.h typedefs.h
+rabin_automaton.o: run.h run_node.h typedefs.h
 run.o: run_node.h typedefs.h
 run_node.o: typedefs.h
-search_context.o: typedefs.h
 
 $(OBJS): boost
 
