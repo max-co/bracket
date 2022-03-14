@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <cwchar>
 #include <fcntl.h>
+#include <iostream>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>

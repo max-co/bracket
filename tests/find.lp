@@ -25,11 +25,8 @@ previous(Y,X) :- descendant(X,Y), has_state(Y,S), has_state(X,S).
 
 :- depth(X,n-1), has_state(X,S), not previous(_,X).
 
-in(X,S) :- has_state(X,S), previous(Y,X).
-in(X,S) :- previous(Y,X), descendant(Z,Y), descendant(X,Z), has_state(Z,S).
-
-l_intersects(N,X) :- l(N,S), in(X,S).
-u_intersects(N,X) :- u(N,S), in(X,S).
+l_intersects(N,X) :- l(N,S), previous(Y,X), descendant(Z,Y), has_state(Z,S), parent(Z,_).
+u_intersects(N,X) :- u(N,S), has_state(X,S), previous(_,X).
 
 accepted(X) :- not l_intersects(N,X), u_intersects(N,X).
 

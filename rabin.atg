@@ -2,6 +2,7 @@
 #include <cinttypes>
 #include <cstdint>
 #include <cerrno>
+#include <utility>
 #include "rabin_automaton.h"
 
 COMPILER Automaton

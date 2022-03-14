@@ -2,24 +2,21 @@
 
 #include "run_node.h"
 
-Run_node::Run_node(const Run_node &arg, const bool desc_only, std::vector<state_t> *const frontier)
-	: state{arg.state}, parent{nullptr}, left{nullptr}, right{nullptr}, live{arg.live}
+Run_node::Run_node(const Run_node &arg, const bool desc_only)
+	: state{arg.state}, parent{nullptr}, left{nullptr}, right{nullptr}, graft{arg.graft}
 {
 	if (!desc_only && !arg.is_root()) {
 		throw Non_root_run_node();
 	}
 	if (nullptr != arg.left) {
-		left = copy_constr_aux(*arg.left, frontier, this);
-		right = copy_constr_aux(*arg.right, frontier, this);
+		left = copy_constr_aux(*arg.left, this);
+		right = copy_constr_aux(*arg.right, this);
 		return;
-	}
-	if (nullptr != frontier) {
-		frontier->push_back(arg.state);
 	}
 }
 
 Run_node::Run_node(Run_node &&arg)
-	: state{arg.state}, parent{arg.parent}, left{arg.left}, right{arg.right}, live{arg.live}
+	: state{arg.state}, parent{arg.parent}, left{arg.left}, right{arg.right}, graft{arg.graft}
 {
 	if (arg.is_left()) {
 		arg.parent->left = this;
@@ -33,21 +30,18 @@ Run_node::Run_node(Run_node &&arg)
 		arg.right->parent = this;
 	}
 	arg.parent = arg.left = arg.right = nullptr;
-	arg.live = false;
+	arg.graft = false;
 }
 
 Run_node *
-Run_node::copy_constr_aux(const Run_node &arg, std::vector<state_t> *const frontier, Run_node *const p)
+Run_node::copy_constr_aux(const Run_node &arg, Run_node *const p)
 {
 	Run_node *const res = new Run_node(arg.state, p);
-	res->live = arg.live;
+	res->graft = arg.graft;
 	if (nullptr != arg.left) {
-		res->left = copy_constr_aux(*arg.left, frontier, res);
-		res->right = copy_constr_aux(*arg.right, frontier, res);
+		res->left = copy_constr_aux(*arg.left, res);
+		res->right = copy_constr_aux(*arg.right, res);
 		return res;
-	}
-	if (nullptr != frontier) {
-		frontier->push_back(arg.state);
 	}
 	return res;
 }

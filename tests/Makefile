@@ -14,9 +14,9 @@ SAT_EXIT = 30
 UNSAT_EXIT = 20
 
 BATCH = 40
-STATES = $(shell seq 5 4 41)
-TRAN = $(shell seq 15 12 123)
-ACC = 4_3
+STATES = $(shell seq 4 3 16)
+TRAN = $(shell seq 16 12 64)
+ACC = 2_2
 
 B_LS = $(foreach var,$(call enum,$(words $(STATES))),$(BATCH)_ )
 S_LS = $(addsuffix _,$(STATES))
@@ -34,8 +34,8 @@ take = $(word $(1),$(subst _,$(empty) $(empty),$(2)))
 enum = $(shell seq -w $(1))
 line = $(shell tr '\n' '\t' < $(2) | cut -f $(1))
 
-OBJS = random_automaton.o ../rabin_automaton.o ../search_context.o ../run_node.o ../run.o
-FORCED = ../version.h ../bracket ../rabin_automaton.o ../search_context.o ../run_node.o ../run.o
+OBJS = random_automaton.o ../rabin_automaton.o ../run_node.o ../run.o
+FORCED = ../version.h ../bracket ../rabin_automaton.o ../run_node.o ../run.o
 
 .PHONY: clean mostlyclean distclean benchmarks tests all
 .INTERMEDIATE: time_installed
@@ -103,7 +103,7 @@ bracket: ../bracket
 random_automaton: ${OBJS}
 	${CXX} ${CPPFLAGS} ${CXXFLAGS} $^ -o $@
 
-random_automaton.o: ../run.h ../run_node.h ../typedefs.h ../rabin_automaton.h ../version.h ../search_context.h random_config.h
+random_automaton.o: ../run.h ../run_node.h ../typedefs.h ../rabin_automaton.h ../version.h random_config.h
 
 $(OBJS): | ../boost
 

@@ -8,7 +8,7 @@
 
 typedef uint_fast32_t state_t;
 #define PRI_STATE PRIuFAST32
-#define STATE_MAX UINT_FAST32_MAX
+#define STATE_MAX UINT32_MAX
 
 typedef boost::dynamic_bitset<> bitset_t;
 typedef uint_least64_t runid_t;
